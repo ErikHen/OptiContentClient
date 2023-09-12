@@ -52,7 +52,7 @@ Configure OptiContent service in Program.cs:
 //optional, but highly recommended to implement IContentCache  
 builder.Services.AddSingleton<IContentCache, MemoryContentCache>(); 
 
-builder.Services.AddOptiContentService(new ContentApiOptions
+builder.Services.AddOptiContentService(new ContentClientOptions
 {
     BaseUrl = builder.Configuration["CmsApiBaseUri"] ?? throw new ConfigurationErrorsException("Missing CmsApiBaseUri in configuration.")
 });
