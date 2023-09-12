@@ -57,7 +57,7 @@ builder.Services.AddOptiContentService(new ContentClientOptions
     BaseUrl = builder.Configuration["CmsApiBaseUri"] ?? throw new ConfigurationErrorsException("Missing CmsApiBaseUri in configuration.")
 });
 ```
-#### ContentApiOptions
+#### ContentClientOptions
 * BaseUrl - Url to CMS
 * CacheSoftTtlSeconds - Content will be considered expired after this, and new content will be fetched from CMS.
 * CacheHardTtlSeconds - How long the content will be stored in the cache (expired or not).
