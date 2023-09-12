@@ -100,10 +100,10 @@ var childrenArray = (await contentService.GetChildren("105","sv")).Content
 
 ## Caching
 
-Fetched content can be cached, the cache has two expiration times; a "soft time to live", and a "hard time to live". Soft TTL is when content is considered expired, and new content will be fetched from CMS. Hard TTL is how long the content will be stored in the cache (expired or not). This means that even if new content can't be fetched from CMS for some reason, the content from the cache will be returned.<br>
+Fetched content can be cached. The cache has two expiration times; a "soft time to live", and a "hard time to live". Soft TTL is when content is considered expired, and new content will be fetched from CMS. Hard TTL is how long the content will be stored in the cache (expired or not). This means that even if new content can't be fetched from CMS for some reason, the content from the cache will be returned.<br>
 Once content have been stored in the cache you could switch off the CMS and your delivery web app would continue to work.  
 
-Out of the box OptiContent doesn't cache the content fetched from the CMS. But it's higly recommended to have some sort of caching by implementing IContentCache. Here is an example of how that can be done using the regular .Net MemoryCache. <br>
+Out-of-the-box OptiContent doesn't cache the content fetched from the CMS. But it's higly recommended to have some sort of caching by implementing IContentCache. Here is an example of how that can be done using the regular .Net MemoryCache. <br>
 For a truly resilient content cache you should also use a persistent cache, like Redis.
 ```csharp
 using Microsoft.Extensions.Caching.Memory;
