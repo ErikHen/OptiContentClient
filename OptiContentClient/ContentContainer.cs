@@ -1,6 +1,7 @@
 ﻿using System.Net;
+using OptiContentClient.Models;
 
-namespace OptiContentClient.Models
+namespace OptiContentClient
 {
     public class ContentContainer
     {

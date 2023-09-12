@@ -1,6 +1,4 @@
-﻿using OptiContentClient.Models;
-
-namespace OptiContentClient
+﻿namespace OptiContentClient
 {
     internal class NoContentCache : IContentCache
     {

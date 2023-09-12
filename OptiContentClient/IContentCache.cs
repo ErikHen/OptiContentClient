@@ -1,6 +1,4 @@
-﻿using OptiContentClient.Models;
-
-namespace OptiContentClient
+﻿namespace OptiContentClient
 {
     public interface IContentCache
     {
