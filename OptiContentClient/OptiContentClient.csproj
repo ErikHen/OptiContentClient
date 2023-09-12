@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFramework>net7.0</TargetFramework>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+		<Version>1.0.0-preview3</Version>
+		<PackageLicenseExpression>MIT</PackageLicenseExpression>
+		<Authors>Erik Henningson</Authors>
+		<Company />
+		<Description>API client for Optimizely CMS Content API.</Description>
+		<PackageProjectUrl>https://github.com/ErikHen/OptiContent</PackageProjectUrl>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<Compile Remove="Models\Media.cs" />
+		<Compile Remove="Models\Properties\PropertyBlob.cs" />
+		<Compile Remove="Models\Properties\PropertyMedia.cs" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Microsoft.Extensions.Http" Version="7.0.0" />
+	</ItemGroup>
+
+</Project>
