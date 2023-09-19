@@ -2,13 +2,16 @@
 {
     internal class NoContentCache : IContentCache
     {
-        public ContentContainer? Get(string key)
+        #pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
+        public async Task<ContentContainer?> Get(string key)
         {
             return null;
         }
 
-        public void Set(string key, ContentContainer contentContainer, TimeSpan expiresAfter)
+        public async Task Set(string key, ContentContainer contentContainer, TimeSpan expiresAfter)
         {
         }
+        #pragma warning restore CS1998
+
     }
 }

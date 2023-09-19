@@ -77,7 +77,7 @@ namespace OptiContentClient.Services
             else
             {
                 var cacheKey = pathAndQuery + "_" + language;
-                contentContainer = GetContentFromCache(cacheKey);
+                contentContainer = await GetContentFromCache(cacheKey);
                 if (contentContainer == null)
                 {
                     //Cache is empty, fetch from CMS (but not if there are too many failed requests).
@@ -85,7 +85,7 @@ namespace OptiContentClient.Services
                     if (contentContainer.FetchStatus == HttpStatusCode.OK && !ignoreCache)
                     {
                         //TODO: should 404 be cached? Would improve performance if the same 404-url was requested repeatedly.
-                        AddContentToCache(cacheKey, contentContainer);
+                        await AddContentToCache(cacheKey, contentContainer);
                     }
                     else
                     {
@@ -102,7 +102,7 @@ namespace OptiContentClient.Services
                         contentContainer = contentFromCms;
                         if (!ignoreCache)
                         {
-                            AddContentToCache(cacheKey, contentContainer);
+                            await AddContentToCache(cacheKey, contentContainer);
                         }
                     }
                     else
@@ -117,15 +117,15 @@ namespace OptiContentClient.Services
             return contentContainer;
         }
 
-        private ContentContainer? GetContentFromCache(string key)
+        private async Task<ContentContainer?> GetContentFromCache(string key)
         {
-            var contentContainer = _contentCache.Get(key);
+            var contentContainer = await _contentCache.Get(key);
             return contentContainer;
         }
 
-        private void AddContentToCache(string key, ContentContainer contentContainer)
+        private async Task AddContentToCache(string key, ContentContainer contentContainer)
         {
-            _contentCache.Set(key, contentContainer, TimeSpan.FromSeconds(_clientOptions.CacheHardTtlSeconds));
+            await _contentCache.Set(key, contentContainer, TimeSpan.FromSeconds(_clientOptions.CacheHardTtlSeconds));
         }
 
         private async Task<ContentContainer> GetContentFromCmsIfNotBackedOff(string pathAndQuery, string language, bool multipleItems)

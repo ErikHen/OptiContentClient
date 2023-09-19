@@ -2,8 +2,8 @@
 {
     public interface IContentCache
     {
-        void Set(string key, ContentContainer contentContainer, TimeSpan expiresAfter);
-        ContentContainer? Get(string key);
+        Task Set(string key, ContentContainer contentContainer, TimeSpan expiresAfter);
+        Task<ContentContainer?> Get(string key);
 
         //TODO: void Clear(string key);
     }
