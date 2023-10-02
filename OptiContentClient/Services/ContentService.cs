@@ -158,7 +158,7 @@ namespace OptiContentClient.Services
                     if (multipleItems)
                     {
                         var contentItems = JsonSerializer.Deserialize<Content[]>(responseString, _jsonOptions);
-                        contentContainer.Content = contentItems;
+                        contentContainer.Content = contentItems ?? Array.Empty<Content>();
                     }
                     else
                     {
