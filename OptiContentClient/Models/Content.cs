@@ -1,6 +1,4 @@
 ﻿
-using OptiContentClient.Models.Properties;
-
 namespace OptiContentClient.Models
 {
     public class Content
@@ -12,10 +10,5 @@ namespace OptiContentClient.Models
         public ContentLanguage? Language { get; set; }
         public ContentLanguage[]? ExistingLanguages { get; set; }
         public string Url { get; set; } = null!;
-
-        /// <summary>
-        /// MimeType is only available for media content.
-        /// </summary>
-        public PropertyString? MimeType { get; set; }
     }
 }

@@ -1,10 +1,9 @@
-﻿using OptiContent.Models.Properties;
+﻿using OptiContentClient.Models.Properties;
 
-namespace OptiContent.Models
+namespace OptiContentClient.Models
 {
     public class Media : Content
     {
-        //will thumbnail ever be needed?  public PropertyBlob? Thumbnail { get; set; } 
         public PropertyString? MimeType { get; set; }
     }
 }

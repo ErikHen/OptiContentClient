@@ -1,4 +1,5 @@
 ﻿using OptiContentClient.Attributes;
+using OptiContentClient.Models;
 
 namespace OptiContentClient
 {
@@ -31,6 +32,16 @@ namespace OptiContentClient
                             Type = c.Type,
                             ComponentName = c.Attribute.Name,
                            // View = c.Attribute.View
+                        };
+                    }
+
+                    // If "Media"-type is not defined, add it
+                    if (!mappingsCache.ContainsKey("Media"))
+                    {
+                        mappingsCache["Media"] = new Mapping
+                        {
+                            Type = typeof(Media),
+                            ComponentName = "",
                         };
                     }
 
