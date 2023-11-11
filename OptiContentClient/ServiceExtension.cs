@@ -5,7 +5,7 @@ namespace OptiContentClient
 {
     public static class ServiceExtension
     {
-        public static void AddOptiContentService(this IServiceCollection services, ContentClientOptions clientOptions)
+        public static void AddOptiContentClient(this IServiceCollection services, ContentClientOptions clientOptions)
         {
             if (services.All(x => x.ServiceType != typeof(IContentCache)))
             {
