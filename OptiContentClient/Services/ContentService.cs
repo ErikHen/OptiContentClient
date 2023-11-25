@@ -28,51 +28,51 @@ namespace OptiContentClient.Services
             _jsonOptions.Converters.Add(new ContentConverter());
         }
 
-        public async Task<ContentContainer> GetContentByPath(string pathAndQuery, bool ignoreCache = false)
+        public async Task<ContentContainer> GetContentByPath(string pathAndQuery, bool ignoreCache = false, int? overrideCacheSoftTtlSeconds = null)
         {
             var expand = pathAndQuery.Contains('?') ? "&expand=*" : "?expand=*";
             var fullPathAndQuery = $"{pathAndQuery}{expand}";
             var isEditMode = pathAndQuery.Contains("epieditmode=true");
 
-            return await GetContentFromCacheOrCms(fullPathAndQuery, string.Empty, false, ignoreCache || isEditMode);
+            return await GetContentFromCacheOrCms(fullPathAndQuery, string.Empty, false, ignoreCache || isEditMode, overrideCacheSoftTtlSeconds);
         }
 
-        public async Task<ContentContainer> GetChildren(string contentIdentifier, string language = "", string expand = "", string select = "", bool ignoreCache = false)
+        public async Task<ContentContainer> GetChildren(string contentIdentifier, string language = "", string expand = "", string select = "", bool ignoreCache = false, int? overrideCacheSoftTtlSeconds = null)
         {
             var expandQuery = expand != "" ? $"expand={expand}&" : "";
             var selectQuery = select != "" ? $"select={select}" : "";
             var fullPathAndQuery = $"/api/episerver/v3.0/content/{contentIdentifier}/children?{expandQuery}{selectQuery}";
 
-            return await GetContentFromCacheOrCms(fullPathAndQuery, language, true, ignoreCache);
+            return await GetContentFromCacheOrCms(fullPathAndQuery, language, true, ignoreCache, overrideCacheSoftTtlSeconds);
         }
 
-        public async Task<ContentContainer> GetAncestors(string contentIdentifier, string language = "", string expand = "", string select = "", bool ignoreCache = false)
+        public async Task<ContentContainer> GetAncestors(string contentIdentifier, string language = "", string expand = "", string select = "", bool ignoreCache = false, int? overrideCacheSoftTtlSeconds = null)
         {
             var expandQuery = expand != "" ? $"expand={expand}&" : "";
             var selectQuery = select != "" ? $"select={select}" : "";
             var fullPathAndQuery = $"/api/episerver/v3.0/content/{contentIdentifier}/ancestors?{expandQuery}{selectQuery}";
 
-            return await GetContentFromCacheOrCms(fullPathAndQuery, language, true, ignoreCache);
+            return await GetContentFromCacheOrCms(fullPathAndQuery, language, true, ignoreCache, overrideCacheSoftTtlSeconds);
         }
 
-        public async Task<ContentContainer> GetContent(string[] contentGuids, string language = "", string expand = "", string select = "", bool ignoreCache = false)
+        public async Task<ContentContainer> GetContent(string[] contentGuids, string language = "", string expand = "", string select = "", bool ignoreCache = false, int? overrideCacheSoftTtlSeconds = null)
         {
             var contentGuidsQuery = "guids=" + string.Join(",", contentGuids) + "&";
             var expandQuery = expand != "" ? $"expand={expand}&" : "";
             var selectQuery = select != "" ? $"select={select}" : "";
             var fullPathAndQuery = $"/api/episerver/v3.0/content?{contentGuidsQuery}{expandQuery}{selectQuery}";
 
-            return await GetContentFromCacheOrCms(fullPathAndQuery, language, true, ignoreCache);
+            return await GetContentFromCacheOrCms(fullPathAndQuery, language, true, ignoreCache, overrideCacheSoftTtlSeconds);
         }
         
         
 
-        private async Task<ContentContainer> GetContentFromCacheOrCms(string pathAndQuery, string language, bool multipleItems, bool ignoreCache)
+        private async Task<ContentContainer> GetContentFromCacheOrCms(string pathAndQuery, string language, bool multipleItems, bool ignoreCache, int? overrideCacheSoftTtlSeconds)
         {
             ContentContainer? contentContainer;
             if (ignoreCache)
             {
-                contentContainer = await GetContentFromCms(pathAndQuery, language, multipleItems);
+                contentContainer = await GetContentFromCms(pathAndQuery, language, multipleItems, overrideCacheSoftTtlSeconds);
             }
             else
             {
@@ -81,7 +81,7 @@ namespace OptiContentClient.Services
                 if (contentContainer == null)
                 {
                     //Cache is empty, fetch from CMS (but not if there are too many failed requests).
-                    contentContainer = await GetContentFromCmsIfNotBackedOff(pathAndQuery, language, multipleItems);
+                    contentContainer = await GetContentFromCmsIfNotBackedOff(pathAndQuery, language, multipleItems, overrideCacheSoftTtlSeconds);
                     if (contentContainer.FetchStatus == HttpStatusCode.OK && !ignoreCache)
                     {
                         //TODO: should 404 be cached? Would improve performance if the same 404-url was requested repeatedly.
@@ -95,7 +95,7 @@ namespace OptiContentClient.Services
                 else if (contentContainer.ExpiresAt < DateTime.UtcNow)
                 {
                     //Cache is not empty, but content has expired. Fetch new content from CMS (but not if there are too many failed requests). 
-                    var contentFromCms = await GetContentFromCmsIfNotBackedOff(pathAndQuery, language, multipleItems);
+                    var contentFromCms = await GetContentFromCmsIfNotBackedOff(pathAndQuery, language, multipleItems, overrideCacheSoftTtlSeconds);
                     if (contentFromCms.FetchStatus == HttpStatusCode.OK)
                     {
                         //Fetch was successful, so return new content.
@@ -128,17 +128,17 @@ namespace OptiContentClient.Services
             await _contentCache.Set(key, contentContainer, TimeSpan.FromSeconds(_clientOptions.CacheHardTtlSeconds));
         }
 
-        private async Task<ContentContainer> GetContentFromCmsIfNotBackedOff(string pathAndQuery, string language, bool multipleItems)
+        private async Task<ContentContainer> GetContentFromCmsIfNotBackedOff(string pathAndQuery, string language, bool multipleItems, int? overrideCacheSoftTtlSeconds)
         {
             if (FailCounterService.FailCount > _clientOptions.FailedFetchLimit)
             {
                 return new ContentContainer { FetchStatus = HttpStatusCode.ServiceUnavailable, Message = "Too many failed requests to CMS. Waiting some time before trying again." };
             }
 
-            return await GetContentFromCms(pathAndQuery, language, multipleItems);
+            return await GetContentFromCms(pathAndQuery, language, multipleItems, overrideCacheSoftTtlSeconds);
         }
 
-        private async Task<ContentContainer> GetContentFromCms(string pathAndQuery, string language, bool multipleItems = false)
+        private async Task<ContentContainer> GetContentFromCms(string pathAndQuery, string language, bool multipleItems, int? overrideCacheSoftTtlSeconds)
         {
             var contentContainer = new ContentContainer();
             var url = $"{_clientOptions.BaseUrl}{pathAndQuery}";
@@ -170,7 +170,7 @@ namespace OptiContentClient.Services
                     }
                     
                     contentContainer.FetchedFromCmsAt = DateTime.UtcNow;
-                    contentContainer.ExpiresAt = DateTime.UtcNow.AddSeconds(_clientOptions.CacheSoftTtlSeconds);
+                    contentContainer.ExpiresAt = DateTime.UtcNow.AddSeconds(overrideCacheSoftTtlSeconds ?? _clientOptions.CacheSoftTtlSeconds);
                 }
                 
                 contentContainer.FetchStatus = response.StatusCode;

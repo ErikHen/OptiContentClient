@@ -7,7 +7,7 @@
         /// <summary>
         /// Content will be considered expired after this, and new content will be fetched from CMS.
         /// </summary>
-        public int CacheSoftTtlSeconds { get; set; } = 60 * 1;
+        public int CacheSoftTtlSeconds { get; set; } = 60 * 2;
 
         /// <summary>
         /// How long the content will be stored in the cache (expired or not).
