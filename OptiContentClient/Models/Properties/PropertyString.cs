@@ -1,7 +1,7 @@
 ﻿namespace OptiContentClient.Models.Properties
 {
     /// <summary>
-    /// Used for PropertyLongString and PropertyXhtmlString
+    /// Used for string, LongString, and XhtmlString
     /// </summary>
     public class PropertyString : PropertyBase
     {

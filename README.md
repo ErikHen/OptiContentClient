@@ -19,9 +19,6 @@ Makes it simple to fetch content and map the content to your strongly types mode
 * Start fetching content!
 
 
-**NOTE: this library is work in progress, it has not been properly tested and is lacking some features.<br>
-It will be production ready before end of 2023.**
-
 ## Enable Content Delivery API in you CMS app
 Add [EPiServer.ContentDeliveryApi.Cms](https://docs.developers.optimizely.com/content-management-system/v1.5.0-content-delivery-api/docs/quick-start), and add configuration in ConfigureServices in Startup.cs:
 ```csharp
@@ -52,7 +49,7 @@ Configure OptiContent service in Program.cs:
 //optional, but highly recommended to implement IContentCache  
 builder.Services.AddSingleton<IContentCache, MemoryContentCache>(); 
 
-builder.Services.AddOptiContentService(new ContentClientOptions
+builder.Services.AddOptiContentClient(new ContentClientOptions
 {
     BaseUrl = builder.Configuration["CmsApiBaseUri"] ?? throw new ConfigurationErrorsException("Missing CmsApiBaseUri in configuration.")
 });
@@ -119,12 +116,12 @@ public class MemoryContentCache : IContentCache
         _memoryCache = memoryCache;
     }
 
-    public ContentContainer? Get(string key)
+    public async Task<ContentContainer?> Get(string key)
     {
         return _memoryCache.TryGetValue(key, out ContentContainer? contentContainer) ? contentContainer : null;
     }
 
-    public void Set(string key, ContentContainer contentContainer, TimeSpan expiresAfter)
+    public async Task Set(string key, ContentContainer contentContainer, TimeSpan expiresAfter)
     {
         _memoryCache.Set(key, contentContainer, expiresAfter);
     }
