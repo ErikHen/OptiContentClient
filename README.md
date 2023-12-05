@@ -13,7 +13,7 @@ Makes it simple to fetch content and map the content to your strongly types mode
   
 ### How to use
 * Enable Content Delivery API on your Optimizely CMS.
-* Add OptiContentClient nuget to your delivery web app.
+* [Add OptiContentClient nuget](https://nuget.optimizely.com/package/?id=OptiContentClient) to your delivery web app.
 * Add viewmodels in your delivery app that map your CMS content models.
 * Implement IContentCache to enable caching of content.
 * Start fetching content!
