@@ -5,7 +5,7 @@ namespace OptiContentClient
 {
     public static class ContentTypeMappings
     {
-        private static IDictionary<string, Mapping>? _mappingsCache; // make static, because it should be "valid" for as long as the app is running
+        private static IDictionary<string, Mapping>? _mappingsCache; // static, because it should be "valid" for as long as the app is running
 
         public static IDictionary<string, Mapping> Mappings
         {
@@ -31,19 +31,15 @@ namespace OptiContentClient
                         {
                             Type = c.Type,
                             ComponentName = c.Attribute.Name,
-                           // View = c.Attribute.View
                         };
                     }
 
                     // If "Media"-type is not defined, add it
-                    if (!mappingsCache.ContainsKey("Media"))
+                    mappingsCache.TryAdd("Media", new Mapping
                     {
-                        mappingsCache["Media"] = new Mapping
-                        {
-                            Type = typeof(Media),
-                            ComponentName = "",
-                        };
-                    }
+                        Type = typeof(Media),
+                        ComponentName = "",
+                    });
 
                     _mappingsCache = mappingsCache; // this makes sure we don't have concurrent operations on the dictionary while it's filling
                     return mappingsCache;
@@ -57,7 +53,6 @@ namespace OptiContentClient
         {
             public string ComponentName { get; set; } = "";
             public Type Type { get; set; } = typeof(object);
-          //  public string? View { get; set; }
         }
     }
 }

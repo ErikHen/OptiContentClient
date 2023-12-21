@@ -11,5 +11,9 @@ namespace OptiContentClient.Models
         public ContentLanguage[]? ExistingLanguages { get; set; }
         public string Url { get; set; } = null!;
         public ContentLink? ParentLink { get; set; }
+        public DateTime? Changed { get; set; }
+        public DateTime? Created { get; set; }
+        public DateTime? StartPublish { get; set; }
+        public DateTime? Saved { get; set; }
     }
 }
