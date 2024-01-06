@@ -5,7 +5,7 @@ namespace OptiContentClient
 {
     public static class ContentTypeMappings
     {
-        private static IDictionary<string, Mapping>? _mappingsCache; // make static, because it should be "valid" for as long as the app is running
+        private static IDictionary<string, Mapping>? _mappingsCache; // static, because it should be "valid" for as long as the app is running
 
         public static IDictionary<string, Mapping> Mappings
         {
