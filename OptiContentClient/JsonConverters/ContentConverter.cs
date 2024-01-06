@@ -16,9 +16,9 @@ namespace OptiContentClient.JsonConverters
                 var rawText = doc.RootElement.GetRawText();
                 try
                 {
-                    if (!(JsonSerializer.Deserialize(rawText, contentTypeMapping.Type, options) is Content item))
+                    if (!(JsonSerializer.Deserialize(rawText, contentTypeMapping.ModelType, options) is Content item))
                     {
-                        throw new Exception($"Unable to deserialize {rawText} to {contentTypeMapping.Type}");
+                        throw new Exception($"Unable to deserialize {rawText} to {contentTypeMapping.ModelType}");
                     }
 
                     return item;
@@ -37,17 +37,42 @@ namespace OptiContentClient.JsonConverters
             };
         }
 
+        /// <summary>
+        /// Find the content type name and find the model type for that content type.
+        /// </summary>
         private static ContentTypeMappings.Mapping? TryGetContentTypeMapping(JsonElement element)
         {
-            var contentTypes = element.GetProperty("contentType").EnumerateArray();
-            //loop types backwards to find the least generic type
-            foreach (var item in contentTypes.Reverse())
+            //if there is a contentType property, get the mapping from one of the content type names.
+            if (element.TryGetProperty("contentType", out var contentTypeElement))
             {
-                if (ContentTypeMappings.Mappings.TryGetValue(item.GetString() ?? "", out var mapping))
+                var contentTypes = contentTypeElement.EnumerateArray();
+                //loop types backwards to find the least generic type
+                foreach (var item in contentTypes.Reverse())
+                {
+                    if (ContentTypeMappings.Mappings.TryGetValue(item.GetString() ?? "", out var mapping))
+                    {
+                        return mapping;
+                    }
+                };
+            }
+
+            //if this content is in a IList (PropertyCollection) the content type name is instead in the "propertyItemType" property (thank´s Optimizely for this inconsistency...).
+            if (element.TryGetProperty("propertyItemType", out var propertyItemTypeElement))
+            {
+                if (ContentTypeMappings.Mappings.TryGetValue(propertyItemTypeElement.GetString() ?? "", out var mapping))
                 {
                     return mapping;
                 }
-            };
+            }
+            //var contentTypes = element.GetProperty("contentType").EnumerateArray();
+            ////loop types backwards to find the least generic type
+            //foreach (var item in contentTypes.Reverse())
+            //{
+            //    if (ContentTypeMappings.Mappings.TryGetValue(item.GetString() ?? "", out var mapping))
+            //    {
+            //        return mapping;
+            //    }
+            //};
 
             return null;
         }
