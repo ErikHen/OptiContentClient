@@ -3,14 +3,11 @@
     [AttributeUsage(AttributeTargets.Class)]
     public class CmsContentTypeAttribute : Attribute
     {
-        public string Name { get; }
+        public string ContentTypeName { get; }
 
-      //  public string? View { get; set; }
-
-        public CmsContentTypeAttribute(string name) //, string? view = null)
+        public CmsContentTypeAttribute(string contentTypeName)
         {
-            Name = name;
-       //     View = view;
+            ContentTypeName = contentTypeName;
         }
     }
 }

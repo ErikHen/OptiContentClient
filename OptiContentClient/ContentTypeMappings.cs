@@ -13,32 +13,29 @@ namespace OptiContentClient
             {
                 if (_mappingsCache == null)
                 {
-                    var components = from a in AppDomain.CurrentDomain.GetAssemblies()
+                    // find all (model) types with the CmsContentTypeAttribute. Add the type and the attribute to a collection.
+                    var typeAndAttributeCollection = from a in AppDomain.CurrentDomain.GetAssemblies()
                         from t in a.GetTypes()
                         let attributes = t.GetCustomAttributes(typeof(CmsContentTypeAttribute), true)
                         where attributes != null && attributes.Length > 0
                         select new {Type = t, Attribute = attributes.Cast<CmsContentTypeAttribute>().First()};
 
+                    // add all "content type name" -> "model type" mappings to a dictionary
                     var mappingsCache = new Dictionary<string, Mapping>();
-                    foreach (var c in components)
+                    foreach (var ta in typeAndAttributeCollection)
                     {
-                        if (mappingsCache.ContainsKey(c.Attribute.Name))
+                        mappingsCache.TryAdd(ta.Attribute.ContentTypeName, new Mapping
                         {
-                            continue;
-                        }
-                        
-                        mappingsCache[c.Attribute.Name] = new Mapping
-                        {
-                            Type = c.Type,
-                            ComponentName = c.Attribute.Name,
-                        };
+                            ModelType = ta.Type,
+                            ContentTypeName = ta.Attribute.ContentTypeName,
+                        });
                     }
 
                     // If "Media"-type is not defined, add it
                     mappingsCache.TryAdd("Media", new Mapping
                     {
-                        Type = typeof(Media),
-                        ComponentName = "",
+                        ModelType = typeof(Media),
+                        ContentTypeName = "",
                     });
 
                     _mappingsCache = mappingsCache; // this makes sure we don't have concurrent operations on the dictionary while it's filling
@@ -51,8 +48,8 @@ namespace OptiContentClient
 
         public class Mapping
         {
-            public string ComponentName { get; set; } = "";
-            public Type Type { get; set; } = typeof(object);
+            public string ContentTypeName { get; set; } = "";
+            public Type ModelType { get; set; } = typeof(object);
         }
     }
 }
