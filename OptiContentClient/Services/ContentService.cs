@@ -28,6 +28,12 @@ namespace OptiContentClient.Services
             _jsonOptions.Converters.Add(new ContentConverter());
         }
 
+        public async Task<ContentContainer<T>> GetContentByPath<T>(string pathAndQuery, bool ignoreCache = false, int? overrideCacheSoftTtlSeconds = null) where T: Content
+        {
+            var contentContainer = await GetContentByPath(pathAndQuery, ignoreCache, overrideCacheSoftTtlSeconds);
+            return CastToTyped<T>(contentContainer);
+        }
+
         public async Task<ContentContainer> GetContentByPath(string pathAndQuery, bool ignoreCache = false, int? overrideCacheSoftTtlSeconds = null)
         {
             var expand = pathAndQuery.Contains('?') ? "&expand=*" : "?expand=*";
@@ -64,8 +70,19 @@ namespace OptiContentClient.Services
 
             return await GetContentFromCacheOrCms(fullPathAndQuery, language, true, ignoreCache, overrideCacheSoftTtlSeconds);
         }
-        
-        
+
+        private ContentContainer<T> CastToTyped<T>(ContentContainer container) where T : Content
+        {
+            var typedContentContainer = new ContentContainer<T>
+            {
+                Content = container.Content.Cast<T>().ToArray(),
+                ExpiresAt = container.ExpiresAt,
+                FetchStatus = container.FetchStatus,
+                FetchedFromCmsAt = container.FetchedFromCmsAt,
+                Message = container.Message
+            };
+            return typedContentContainer;
+        }
 
         private async Task<ContentContainer> GetContentFromCacheOrCms(string pathAndQuery, string language, bool multipleItems, bool ignoreCache, int? overrideCacheSoftTtlSeconds)
         {
