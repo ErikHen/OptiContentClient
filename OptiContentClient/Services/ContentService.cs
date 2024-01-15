@@ -28,6 +28,12 @@ namespace OptiContentClient.Services
             _jsonOptions.Converters.Add(new ContentConverter());
         }
 
+        public async Task<ContentContainer<T>> GetContentByPath<T>(string pathAndQuery, bool ignoreCache = false, int? overrideCacheSoftTtlSeconds = null) where T: Content
+        {
+            var contentContainer = await GetContentByPath(pathAndQuery, ignoreCache, overrideCacheSoftTtlSeconds);
+            return CastToTyped<T>(contentContainer);
+        }
+
         public async Task<ContentContainer> GetContentByPath(string pathAndQuery, bool ignoreCache = false, int? overrideCacheSoftTtlSeconds = null)
         {
             var expand = pathAndQuery.Contains('?') ? "&expand=*" : "?expand=*";
@@ -35,6 +41,13 @@ namespace OptiContentClient.Services
             var isEditMode = pathAndQuery.Contains("epieditmode=true");
 
             return await GetContentFromCacheOrCms(fullPathAndQuery, string.Empty, false, ignoreCache || isEditMode, overrideCacheSoftTtlSeconds);
+        }
+
+
+        public async Task<ContentContainer<T>> GetChildren<T>(string contentIdentifier, string language = "", string expand = "", string select = "", bool ignoreCache = false, int? overrideCacheSoftTtlSeconds = null) where T : Content
+        {
+            var contentContainer = await GetChildren(contentIdentifier, language, expand, select, ignoreCache, overrideCacheSoftTtlSeconds);
+            return CastToTyped<T>(contentContainer);
         }
 
         public async Task<ContentContainer> GetChildren(string contentIdentifier, string language = "", string expand = "", string select = "", bool ignoreCache = false, int? overrideCacheSoftTtlSeconds = null)
@@ -46,6 +59,13 @@ namespace OptiContentClient.Services
             return await GetContentFromCacheOrCms(fullPathAndQuery, language, true, ignoreCache, overrideCacheSoftTtlSeconds);
         }
 
+
+        public async Task<ContentContainer<T>> GetAncestors<T>(string contentIdentifier, string language = "", string expand = "", string select = "", bool ignoreCache = false, int? overrideCacheSoftTtlSeconds = null) where T : Content
+        {
+            var contentContainer = await GetAncestors(contentIdentifier, language, expand, select, ignoreCache, overrideCacheSoftTtlSeconds);
+            return CastToTyped<T>(contentContainer);
+        }
+
         public async Task<ContentContainer> GetAncestors(string contentIdentifier, string language = "", string expand = "", string select = "", bool ignoreCache = false, int? overrideCacheSoftTtlSeconds = null)
         {
             var expandQuery = expand != "" ? $"expand={expand}&" : "";
@@ -53,6 +73,13 @@ namespace OptiContentClient.Services
             var fullPathAndQuery = $"/api/episerver/v3.0/content/{contentIdentifier}/ancestors?{expandQuery}{selectQuery}";
 
             return await GetContentFromCacheOrCms(fullPathAndQuery, language, true, ignoreCache, overrideCacheSoftTtlSeconds);
+        }
+
+
+        public async Task<ContentContainer<T>> GetContent<T>(string[] contentGuids, string language = "", string expand = "", string select = "", bool ignoreCache = false, int? overrideCacheSoftTtlSeconds = null) where T : Content
+        {
+            var contentContainer = await GetContent(contentGuids, language, expand, select, ignoreCache, overrideCacheSoftTtlSeconds);
+            return CastToTyped<T>(contentContainer);
         }
 
         public async Task<ContentContainer> GetContent(string[] contentGuids, string language = "", string expand = "", string select = "", bool ignoreCache = false, int? overrideCacheSoftTtlSeconds = null)
@@ -64,8 +91,20 @@ namespace OptiContentClient.Services
 
             return await GetContentFromCacheOrCms(fullPathAndQuery, language, true, ignoreCache, overrideCacheSoftTtlSeconds);
         }
-        
-        
+
+
+        private static ContentContainer<T> CastToTyped<T>(ContentContainer container) where T : Content
+        {
+            var typedContentContainer = new ContentContainer<T>
+            {
+                Content = container.Content.Cast<T>().ToArray(),
+                ExpiresAt = container.ExpiresAt,
+                FetchStatus = container.FetchStatus,
+                FetchedFromCmsAt = container.FetchedFromCmsAt,
+                Message = container.Message
+            };
+            return typedContentContainer;
+        }
 
         private async Task<ContentContainer> GetContentFromCacheOrCms(string pathAndQuery, string language, bool multipleItems, bool ignoreCache, int? overrideCacheSoftTtlSeconds)
         {
