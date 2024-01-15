@@ -1,6 +1,7 @@
 ﻿using System.Text.Json;
 using System.Text.Json.Serialization;
 using OptiContentClient.Models;
+#pragma warning disable CA1869
 
 namespace OptiContentClient.JsonConverters
 {
@@ -35,6 +36,21 @@ namespace OptiContentClient.JsonConverters
                 Name = doc.RootElement.GetProperty("name").GetString() ?? "",
                 ContentType = GetContentTypes(doc.RootElement),
             };
+        }
+
+        public override void Write(Utf8JsonWriter writer, Content value, JsonSerializerOptions options)
+        {
+            var type = value.GetType();
+            if (type == typeof(Content))
+            {
+                //Can't use options that include this converter, because it will mean an infinite loop.
+                //So, create a new options object without this converter, and serialize. Probably not a very performant solution, but this is a very rare edge case.
+                JsonSerializer.Serialize(writer, value, type, new JsonSerializerOptions{ PropertyNameCaseInsensitive = options.PropertyNameCaseInsensitive, PropertyNamingPolicy = options.PropertyNamingPolicy});
+            }
+            else
+            {
+                JsonSerializer.Serialize(writer, value, type, options);
+            }
         }
 
         /// <summary>
@@ -82,10 +98,6 @@ namespace OptiContentClient.JsonConverters
             var contentTypeElement = element.GetProperty("contentType");
             return contentTypeElement.EnumerateArray().Select(e => e.GetString() ?? "").ToArray();
         }
-
-        public override void Write(Utf8JsonWriter writer, Content value, JsonSerializerOptions options)
-        {
-            throw new NotImplementedException();
-        }
+        
     }
 }
