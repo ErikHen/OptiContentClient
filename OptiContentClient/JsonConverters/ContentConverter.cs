@@ -80,15 +80,6 @@ namespace OptiContentClient.JsonConverters
                     return mapping;
                 }
             }
-            //var contentTypes = element.GetProperty("contentType").EnumerateArray();
-            ////loop types backwards to find the least generic type
-            //foreach (var item in contentTypes.Reverse())
-            //{
-            //    if (ContentTypeMappings.Mappings.TryGetValue(item.GetString() ?? "", out var mapping))
-            //    {
-            //        return mapping;
-            //    }
-            //};
 
             return null;
         }

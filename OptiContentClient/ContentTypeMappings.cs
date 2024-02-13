@@ -38,6 +38,14 @@ namespace OptiContentClient
                         ContentTypeName = "",
                     });
 
+                    // If "Page"-type is not defined, add it.
+                    // This is the fallback type if no other page type is found. Can't use "Content" because it would mean an infinite loop in the json converter.
+                    mappingsCache.TryAdd("Page", new Mapping
+                    {
+                        ModelType = typeof(UnmappedContent),
+                        ContentTypeName = "",
+                    });
+
                     _mappingsCache = mappingsCache; // this makes sure we don't have concurrent operations on the dictionary while it's filling
                     return mappingsCache;
                 }
