@@ -44,50 +44,50 @@ namespace OptiContentClient.Services
         }
 
 
-        public async Task<ContentContainer<T>> GetChildren<T>(string contentIdentifier, string language = "", string expand = "", string select = "", bool ignoreCache = false, int? overrideCacheSoftTtlSeconds = null) where T : Content
+        public async Task<ContentContainer<T>> GetChildren<T>(string contentIdentifier, string language = "", string expand = "", string select = "", string additionalQuery = "", bool ignoreCache = false, int? overrideCacheSoftTtlSeconds = null) where T : Content
         {
-            var contentContainer = await GetChildren(contentIdentifier, language, expand, select, ignoreCache, overrideCacheSoftTtlSeconds);
+            var contentContainer = await GetChildren(contentIdentifier, language, expand, select, additionalQuery, ignoreCache, overrideCacheSoftTtlSeconds);
             return CastToTyped<T>(contentContainer);
         }
 
-        public async Task<ContentContainer> GetChildren(string contentIdentifier, string language = "", string expand = "", string select = "", bool ignoreCache = false, int? overrideCacheSoftTtlSeconds = null)
+        public async Task<ContentContainer> GetChildren(string contentIdentifier, string language = "", string expand = "", string select = "", string additionalQuery = "", bool ignoreCache = false, int? overrideCacheSoftTtlSeconds = null)
         {
             var expandQuery = expand != "" ? $"expand={expand}&" : "";
-            var selectQuery = select != "" ? $"select={select}" : "";
-            var fullPathAndQuery = $"/api/episerver/v3.0/content/{contentIdentifier}/children?{expandQuery}{selectQuery}";
+            var selectQuery = select != "" ? $"select={select}&" : "";
+            var fullPathAndQuery = $"/api/episerver/v3.0/content/{contentIdentifier}/children?{expandQuery}{selectQuery}{additionalQuery}";
 
             return await GetContentFromCacheOrCms(fullPathAndQuery, language, true, ignoreCache, overrideCacheSoftTtlSeconds);
         }
 
 
-        public async Task<ContentContainer<T>> GetAncestors<T>(string contentIdentifier, string language = "", string expand = "", string select = "", bool ignoreCache = false, int? overrideCacheSoftTtlSeconds = null) where T : Content
+        public async Task<ContentContainer<T>> GetAncestors<T>(string contentIdentifier, string language = "", string expand = "", string select = "", string additionalQuery = "", bool ignoreCache = false, int? overrideCacheSoftTtlSeconds = null) where T : Content
         {
-            var contentContainer = await GetAncestors(contentIdentifier, language, expand, select, ignoreCache, overrideCacheSoftTtlSeconds);
+            var contentContainer = await GetAncestors(contentIdentifier, language, expand, select, additionalQuery, ignoreCache, overrideCacheSoftTtlSeconds);
             return CastToTyped<T>(contentContainer);
         }
 
-        public async Task<ContentContainer> GetAncestors(string contentIdentifier, string language = "", string expand = "", string select = "", bool ignoreCache = false, int? overrideCacheSoftTtlSeconds = null)
+        public async Task<ContentContainer> GetAncestors(string contentIdentifier, string language = "", string expand = "", string select = "", string additionalQuery = "", bool ignoreCache = false, int? overrideCacheSoftTtlSeconds = null)
         {
             var expandQuery = expand != "" ? $"expand={expand}&" : "";
-            var selectQuery = select != "" ? $"select={select}" : "";
-            var fullPathAndQuery = $"/api/episerver/v3.0/content/{contentIdentifier}/ancestors?{expandQuery}{selectQuery}";
+            var selectQuery = select != "" ? $"select={select}&" : "";
+            var fullPathAndQuery = $"/api/episerver/v3.0/content/{contentIdentifier}/ancestors?{expandQuery}{selectQuery}{additionalQuery}";
 
             return await GetContentFromCacheOrCms(fullPathAndQuery, language, true, ignoreCache, overrideCacheSoftTtlSeconds);
         }
 
 
-        public async Task<ContentContainer<T>> GetContent<T>(string[] contentGuids, string language = "", string expand = "", string select = "", bool ignoreCache = false, int? overrideCacheSoftTtlSeconds = null) where T : Content
+        public async Task<ContentContainer<T>> GetContent<T>(string[] contentGuids, string language = "", string expand = "", string select = "", string additionalQuery = "", bool ignoreCache = false, int? overrideCacheSoftTtlSeconds = null) where T : Content
         {
-            var contentContainer = await GetContent(contentGuids, language, expand, select, ignoreCache, overrideCacheSoftTtlSeconds);
+            var contentContainer = await GetContent(contentGuids, language, expand, select, additionalQuery, ignoreCache, overrideCacheSoftTtlSeconds);
             return CastToTyped<T>(contentContainer);
         }
 
-        public async Task<ContentContainer> GetContent(string[] contentGuids, string language = "", string expand = "", string select = "", bool ignoreCache = false, int? overrideCacheSoftTtlSeconds = null)
+        public async Task<ContentContainer> GetContent(string[] contentGuids, string language = "", string expand = "", string select = "", string additionalQuery = "", bool ignoreCache = false, int? overrideCacheSoftTtlSeconds = null)
         {
             var contentGuidsQuery = "guids=" + string.Join(",", contentGuids) + "&";
             var expandQuery = expand != "" ? $"expand={expand}&" : "";
-            var selectQuery = select != "" ? $"select={select}" : "";
-            var fullPathAndQuery = $"/api/episerver/v3.0/content?{contentGuidsQuery}{expandQuery}{selectQuery}";
+            var selectQuery = select != "" ? $"select={select}&" : "";
+            var fullPathAndQuery = $"/api/episerver/v3.0/content?{contentGuidsQuery}{expandQuery}{selectQuery}{additionalQuery}";
 
             return await GetContentFromCacheOrCms(fullPathAndQuery, language, true, ignoreCache, overrideCacheSoftTtlSeconds);
         }
