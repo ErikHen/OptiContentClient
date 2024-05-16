@@ -10,6 +10,7 @@
 		<Company />
 		<Description>.Net client for Optimizely CMS Content Delivery API.</Description>
 		<PackageProjectUrl>https://github.com/ErikHen/OptiContentClient/</PackageProjectUrl>
+		<PackageIconUrl>https://raw.githubusercontent.com/ErikHen/OptiContentClient/main/nugetlogo.png</PackageIconUrl>
 	</PropertyGroup>
 
 	<ItemGroup>
