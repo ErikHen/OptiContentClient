@@ -28,19 +28,19 @@ namespace OptiContentClient.Services
             _jsonOptions.Converters.Add(new ContentConverter());
         }
 
-        public async Task<ContentContainer<T>> GetContentByPath<T>(string pathAndQuery, bool ignoreCache = false, int? overrideCacheSoftTtlSeconds = null) where T: Content
+        public async Task<ContentContainer<T>> GetContentByPath<T>(string path, bool ignoreCache = false, int? overrideCacheSoftTtlSeconds = null) where T: Content
         {
-            var contentContainer = await GetContentByPath(pathAndQuery, ignoreCache, overrideCacheSoftTtlSeconds);
+            var contentContainer = await GetContentByPath(path, ignoreCache, overrideCacheSoftTtlSeconds);
             return CastToTyped<T>(contentContainer);
         }
 
-        public async Task<ContentContainer> GetContentByPath(string pathAndQuery, bool ignoreCache = false, int? overrideCacheSoftTtlSeconds = null)
+        public async Task<ContentContainer> GetContentByPath(string path, bool ignoreCache = false, int? overrideCacheSoftTtlSeconds = null)
         {
-            var expand = pathAndQuery.Contains('?') ? "&expand=*" : "?expand=*";
-            var fullPathAndQuery = $"{pathAndQuery}{expand}";
-            var isEditMode = pathAndQuery.Contains("epieditmode=true");
+            //handle if there are query parameters in the path
+            var isEditMode = path.Contains("epieditmode=true"); //keep behaviour as v1.x, even though query parameters should not be part of the path
+            var purePath = path.Split('?')[0]; //remove query parameters from path, because otherwise they will be part of the cache key
 
-            return await GetContentFromCacheOrCms(fullPathAndQuery, string.Empty, false, ignoreCache || isEditMode, overrideCacheSoftTtlSeconds);
+            return await GetContentFromCacheOrCms(purePath +"?expand=*", string.Empty, false, ignoreCache || isEditMode, overrideCacheSoftTtlSeconds);
         }
 
 
