@@ -36,11 +36,11 @@ namespace OptiContentClient.Services
 
         public async Task<ContentContainer> GetContentByPath(string path, bool ignoreCache = false, int? overrideCacheSoftTtlSeconds = null)
         {
-            //handle if there are query parameters in the path
-            var isEditMode = path.Contains("epieditmode=true"); //keep behaviour as v1.x, even though query parameters should not be part of the path
+            var isEditMode = path.Contains("epieditmode=true"); 
             var purePath = path.Split('?')[0]; //remove query parameters from path, because otherwise they will be part of the cache key
+            var editModeQuery = isEditMode ? "&epieditmode=true" : ""; //but keep edit mode parameter because it might be needed for the CMS request
 
-            return await GetContentFromCacheOrCms(purePath +"?expand=*", string.Empty, false, ignoreCache || isEditMode, overrideCacheSoftTtlSeconds);
+            return await GetContentFromCacheOrCms(purePath + $"?expand=*{editModeQuery}", string.Empty, false, ignoreCache || isEditMode, overrideCacheSoftTtlSeconds);
         }
 
 
