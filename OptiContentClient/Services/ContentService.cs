@@ -1,5 +1,6 @@
 ﻿using System.Net;
 using System.Text.Json;
+using System.Web;
 using OptiContentClient.JsonConverters;
 using OptiContentClient.Models;
 
@@ -36,11 +37,19 @@ namespace OptiContentClient.Services
 
         public async Task<ContentContainer> GetContentByPath(string path, bool ignoreCache = false, int? overrideCacheSoftTtlSeconds = null)
         {
-            var isEditMode = path.Contains("epieditmode=true"); 
-            var purePath = path.Split('?')[0]; //remove query parameters from path, because otherwise they will be part of the cache key
-            var editModeQuery = isEditMode ? "&epieditmode=true" : ""; //but keep edit mode parameter because it might be needed for the CMS request
+            var isEditOrPreviewMode = false;
+            var editModeQuery = string.Empty;
+            var pathParts = path.Split('?');
+            var purePath = pathParts[0]; //remove query parameters from path, because otherwise they will be part of the cache key
+            if (pathParts.Length > 1)
+            {
+                var queryParameters = HttpUtility.ParseQueryString("?" + pathParts[1]);
+                var editModeValue = queryParameters["epieditmode"];
+                isEditOrPreviewMode = editModeValue != "";
+                editModeQuery = isEditOrPreviewMode ? "&epieditmode=" + editModeValue : ""; //but keep edit mode parameter because it might be needed for the CMS request
+            }
 
-            return await GetContentFromCacheOrCms(purePath + $"?expand=*{editModeQuery}", string.Empty, false, ignoreCache || isEditMode, overrideCacheSoftTtlSeconds);
+            return await GetContentFromCacheOrCms(purePath + $"?expand=*{editModeQuery}", string.Empty, false, ignoreCache || isEditOrPreviewMode, overrideCacheSoftTtlSeconds);
         }
 
 
