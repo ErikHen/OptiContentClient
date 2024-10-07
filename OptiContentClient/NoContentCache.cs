@@ -11,7 +11,11 @@
         public async Task Set(string key, ContentContainer contentContainer, TimeSpan expiresAfter)
         {
         }
-        #pragma warning restore CS1998
+
+        public async Task SetRefreshStarted(string key, ContentContainer contentContainer)
+        {
+        }
+#pragma warning restore CS1998
 
     }
 }

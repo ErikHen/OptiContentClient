@@ -12,6 +12,22 @@ namespace OptiContentClient
         /// </summary>
         public DateTime FetchedFromCmsAt { get; set; }
         public DateTime ExpiresAt { get; set; }
+        public DateTime? LastRefreshStartedAt { get; set; }
+
+        public bool ShouldRefresh()
+        {
+            if (ExpiresAt < DateTime.UtcNow)
+            {
+                //data in cache is expired
+                if (!LastRefreshStartedAt.HasValue || LastRefreshStartedAt < DateTime.UtcNow.AddSeconds(-30))
+                {
+                    //no refresh in progress, or it started more than 30 seconds ago
+                    return true;
+                }
+            }
+
+            return false;
+        }
     }
 
     public class ContentContainer : ContentContainerBase
