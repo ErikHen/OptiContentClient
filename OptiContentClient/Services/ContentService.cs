@@ -8,7 +8,7 @@ namespace OptiContentClient.Services
 {
     public class ContentService
     {
-        private readonly HttpClient _httpClient;
+        private readonly IHttpClientFactory _httpClientFactory;
         private readonly ContentClientOptions _clientOptions;
         private readonly JsonSerializerOptions _jsonOptions;
         private readonly IContentCache _contentCache;
@@ -16,10 +16,7 @@ namespace OptiContentClient.Services
         public ContentService(IHttpClientFactory httpClientFactory, ContentClientOptions clientOptions, IContentCache contentCache)
         {
             _contentCache = contentCache;
-            _httpClient = httpClientFactory.CreateClient(nameof(ContentService));
-            _httpClient.DefaultRequestHeaders.Add("Accept", "application/json");
-            _httpClient.Timeout = TimeSpan.FromMilliseconds(clientOptions.TimeoutMilliseconds);
-
+            _httpClientFactory = httpClientFactory;
             _clientOptions = clientOptions;
 
             _jsonOptions = new JsonSerializerOptions
@@ -190,6 +187,7 @@ namespace OptiContentClient.Services
         {
             var contentContainer = new ContentContainer();
             var url = $"{_clientOptions.BaseUrl}{pathAndQuery}";
+            var httpClient = GetHttpClient();
 
             try
             {
@@ -198,7 +196,7 @@ namespace OptiContentClient.Services
                 {
                     request.Headers.Add("Accept-Language", language);
                 }
-                var response = await _httpClient.SendAsync(request);
+                var response = await httpClient.SendAsync(request);
                     
                 if (response.StatusCode == HttpStatusCode.OK)
                 {
@@ -243,6 +241,14 @@ namespace OptiContentClient.Services
             {
                 FailCounterService.AddFail();
             }
+        }
+
+        private HttpClient GetHttpClient()
+        {
+            var httpClient = _httpClientFactory.CreateClient(nameof(ContentService));
+            httpClient.DefaultRequestHeaders.Add("Accept", "application/json");
+            httpClient.Timeout = TimeSpan.FromMilliseconds(_clientOptions.TimeoutMilliseconds);
+            return httpClient;
         }
     }
 }
