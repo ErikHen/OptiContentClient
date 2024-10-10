@@ -122,7 +122,6 @@ namespace OptiContentClient.Services
             else
             {
                 var cacheKey = GetCacheKey(pathAndQuery, language);
-                //contentContainer = await GetContentFromCache(cacheKey);
                 contentContainer = await _contentCache.Get(cacheKey);
                 if (contentContainer == null)
                 {
@@ -157,7 +156,6 @@ namespace OptiContentClient.Services
             {
                 if (!ignoreCache)
                 { 
-                    //await AddContentToCache(GetCacheKey(pathAndQuery, language), contentFromCms);
                     await _contentCache.Set(GetCacheKey(pathAndQuery, language), contentFromCms, TimeSpan.FromSeconds(_clientOptions.CacheHardTtlSeconds));
                 }
             }
@@ -214,7 +212,7 @@ namespace OptiContentClient.Services
             }
             catch (TaskCanceledException)
             {
-                //fetch timeout error https://www.tabsoverspaces.com/233134-taskcanceledexception-on-timeout-on-httpclient
+                //fetch-timeout error https://www.tabsoverspaces.com/233134-taskcanceledexception-on-timeout-on-httpclient
                 contentContainer.FetchStatus = HttpStatusCode.RequestTimeout;
             }
             catch (Exception e)
