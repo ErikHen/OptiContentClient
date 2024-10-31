@@ -96,12 +96,12 @@ var childrenArray = (await contentService.GetChildren("105","sv")).Content
 <br>
 
 ## Caching
-
-Fetched content can be cached. The cache has two expiration times; a "soft time to live", and a "hard time to live". Soft TTL is when content is considered expired, and new content will be fetched from CMS. Hard TTL is how long the content will be stored in the cache (expired or not). This means that even if new content can't be fetched from CMS for some reason, the content from the cache will be returned.<br>
+OptiContentClient implements a stale-while-revalidate cache. Meaning that content will always be returned quickly from cache. If content is expired it will be updated in a background thread, and the new request will get content fresh from the CMS.
+The cache has two expiration times; a "soft time to live", and a "hard time to live". Soft TTL is when content is considered expired, and new content will be fetched from CMS. Hard TTL is how long the content will be stored in the cache (expired or not). This means that if new content can't be fetched from CMS for some reason, previously fetched content will be returned.<br>
 Once content have been stored in the cache you could switch off the CMS and your delivery web app would continue to work.  
 
-Out-of-the-box OptiContent doesn't cache the content fetched from the CMS. But it's higly recommended to have some sort of caching by implementing IContentCache. Here is an example of how that can be done using the regular .Net MemoryCache. <br>
-For a truly resilient content cache you should also use a persistent cache, like Redis.
+It's up to you to enable where content should be cached by implementing IContentCache. Here is an example of how that can be done using the regular .Net MemoryCache. <br>
+For a truly resilient content cache you could also use a persistent cache, like Redis.
 ```csharp
 using Microsoft.Extensions.Caching.Memory;
 using OptiContentClient;
@@ -135,21 +135,20 @@ flowchart TD
     App[Your app] -->|Give me content!| A 
     A -.->|Result| App
     A[OptiContentClient] --> C{Is content <br>in cache?}
+    C -.->|Yes, return<br> cached content| A
     C -->|Yes| D{Is content <br>still valid?}
-    D -.->|Yes, return cached content| A
-    D -->|No, get from CMS| RF{Repeating <br>failure?}
-    RF -.->|Yes, return cached content| A 
+    D -->|No, update cache in background thread| RF{Repeating <br>failure?}
     RF -->|No, fetch from CMS| FF{Failure or time-out <br>when fetching?}
-    FF -.->|Yes, return cached content| A 
-    FF -->|No| AC[Add to cache<br>and return content]
-    AC -.-> A
+   
+    FF -->|No| AC2[Add to cache]
     C --->|No, Get from CMS| RF2{Repeating <br> failure?}
     RF2 -->|Yes| RFail(Return failure) 
     RFail -.-> A
     RF2 -->|No, fetch from CMS| FF2{Failure or time-out <br>when fetching?} 
     FF2 -->|Yes| RFail 
     FF2 -->|No| AC(Add to cache<br>and return content)
-    linkStyle 4,6,8,9,10 stroke:green;
-    linkStyle 13 stroke:red;
+    AC -.-> A
+    linkStyle 3,14 stroke:green;
+    linkStyle 10 stroke:red;
 ```
 

@@ -4,7 +4,5 @@
     {
         Task Set(string key, ContentContainer contentContainer, TimeSpan expiresAfter);
         Task<ContentContainer?> Get(string key);
-
-        //TODO: void Clear(string key);
     }
 }

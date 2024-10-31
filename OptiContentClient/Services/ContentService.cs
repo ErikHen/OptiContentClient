@@ -121,66 +121,55 @@ namespace OptiContentClient.Services
             }
             else
             {
-                var cacheKey = pathAndQuery + "_" + language;
-                contentContainer = await GetContentFromCache(cacheKey);
+                var cacheKey = GetCacheKey(pathAndQuery, language);
+                contentContainer = await _contentCache.Get(cacheKey);
                 if (contentContainer == null)
                 {
-                    //Cache is empty, fetch from CMS (but not if there are too many failed requests).
-                    contentContainer = await GetContentFromCmsIfNotBackedOff(pathAndQuery, language, multipleItems, overrideCacheSoftTtlSeconds);
-                    if (contentContainer.FetchStatus == HttpStatusCode.OK && !ignoreCache)
-                    {
-                        //TODO: should 404 be cached? Would improve performance if the same 404-url was requested repeatedly.
-                        await AddContentToCache(cacheKey, contentContainer);
-                    }
-                    else
-                    {
-                        AddFailCount(contentContainer.FetchStatus);
-                    }
+                    //Cache is empty, fetch from CMS.
+                    contentContainer = await GetContentFromCmsAndAddToCache(pathAndQuery, language, multipleItems, ignoreCache, overrideCacheSoftTtlSeconds);
                 }
-                else if (contentContainer.ExpiresAt < DateTime.UtcNow)
+                else if (contentContainer.ShouldRefresh())
                 {
-                    //Cache is not empty, but content has expired. Fetch new content from CMS (but not if there are too many failed requests). 
-                    var contentFromCms = await GetContentFromCmsIfNotBackedOff(pathAndQuery, language, multipleItems, overrideCacheSoftTtlSeconds);
-                    if (contentFromCms.FetchStatus == HttpStatusCode.OK)
-                    {
-                        //Fetch was successful, so return new content.
-                        contentContainer = contentFromCms;
-                        if (!ignoreCache)
-                        {
-                            await AddContentToCache(cacheKey, contentContainer);
-                        }
-                    }
-                    else
-                    {
-                        AddFailCount(contentContainer.FetchStatus);
-                        contentContainer.FetchStatus = contentFromCms.FetchStatus; //update fetch status so it's possible to see why new fetch failed.
-                        contentContainer.Message = contentFromCms.Message;
-                    }
+                    //Cache is not empty, but content has expired.
+                    //Set that refresh has started, so that other requests don't try to refresh the same content.
+                    contentContainer.LastRefreshStartedAt = DateTime.UtcNow;
+                    await _contentCache.Set(cacheKey, contentContainer, TimeSpan.FromSeconds(_clientOptions.CacheHardTtlSeconds));
+
+                    //Fetch new content from CMS in background thread.
+                    _ = Task.Run(() => GetContentFromCmsAndAddToCache(pathAndQuery, language, multipleItems, ignoreCache, overrideCacheSoftTtlSeconds));
                 }
             }
 
             return contentContainer;
         }
 
-        private async Task<ContentContainer?> GetContentFromCache(string key)
+        private async Task<ContentContainer> GetContentFromCmsAndAddToCache(string pathAndQuery, string language, bool multipleItems, bool ignoreCache, int? overrideCacheSoftTtlSeconds)
         {
-            var contentContainer = await _contentCache.Get(key);
-            return contentContainer;
-        }
-
-        private async Task AddContentToCache(string key, ContentContainer contentContainer)
-        {
-            await _contentCache.Set(key, contentContainer, TimeSpan.FromSeconds(_clientOptions.CacheHardTtlSeconds));
-        }
-
-        private async Task<ContentContainer> GetContentFromCmsIfNotBackedOff(string pathAndQuery, string language, bool multipleItems, int? overrideCacheSoftTtlSeconds)
-        {
+            //If there are too many failed requests, don't try to fetch from CMS.
             if (FailCounterService.FailCount > _clientOptions.FailedFetchLimit)
             {
                 return new ContentContainer { FetchStatus = HttpStatusCode.ServiceUnavailable, Message = "Too many failed requests to CMS. Waiting some time before trying again." };
             }
 
-            return await GetContentFromCms(pathAndQuery, language, multipleItems, overrideCacheSoftTtlSeconds);
+            var contentFromCms = await GetContentFromCms(pathAndQuery, language, multipleItems, overrideCacheSoftTtlSeconds);
+            if (contentFromCms.FetchStatus == HttpStatusCode.OK)
+            {
+                if (!ignoreCache)
+                { 
+                    await _contentCache.Set(GetCacheKey(pathAndQuery, language), contentFromCms, TimeSpan.FromSeconds(_clientOptions.CacheHardTtlSeconds));
+                }
+            }
+            else
+            {
+                AddFailCount(contentFromCms.FetchStatus);
+            }
+
+            return contentFromCms;
+        }
+
+        private static string GetCacheKey(string pathAndQuery, string language)
+        {
+            return pathAndQuery + "_" + language;
         }
 
         private async Task<ContentContainer> GetContentFromCms(string pathAndQuery, string language, bool multipleItems, int? overrideCacheSoftTtlSeconds)
@@ -223,7 +212,7 @@ namespace OptiContentClient.Services
             }
             catch (TaskCanceledException)
             {
-                //fetch timeout error https://www.tabsoverspaces.com/233134-taskcanceledexception-on-timeout-on-httpclient
+                //fetch-timeout error https://www.tabsoverspaces.com/233134-taskcanceledexception-on-timeout-on-httpclient
                 contentContainer.FetchStatus = HttpStatusCode.RequestTimeout;
             }
             catch (Exception e)
