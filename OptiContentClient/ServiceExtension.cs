@@ -13,6 +13,10 @@ namespace OptiContentClient
             }
             services.AddHttpClient<ContentService>();
             services.AddSingleton(s => new ContentService(s.GetService<IHttpClientFactory>()!, clientOptions, s.GetService<IContentCache>()!));
+
+            //This will fill the mappings cache add startup, instead of at first request.
+            var mappings = ContentTypeMappings.Mappings;
+            //This means a slight delay at startup, but in a scale-out scenario it's better to have it filled at startup, before a massive amount of requests hits the server
         }
     }
 }
