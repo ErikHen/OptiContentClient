@@ -155,9 +155,21 @@ namespace OptiContentClient.Services
             if (contentFromCms.FetchStatus == HttpStatusCode.OK)
             {
                 if (!ignoreCache)
-                { 
+                {
                     await _contentCache.Set(GetCacheKey(pathAndQuery, language), contentFromCms, TimeSpan.FromSeconds(_clientOptions.CacheHardTtlSeconds));
                 }
+            }
+            else if (contentFromCms.FetchStatus == HttpStatusCode.NotFound)
+            {
+                if (!ignoreCache)
+                {
+                    //NotFound is also cached to prevent multiple requests for the same non-existing content to reach the CMS.
+                    //Content could also have been deleted/unpublished in CMS, and cache needs to be updated with this info.
+                    await _contentCache.Set(GetCacheKey(pathAndQuery, language), contentFromCms, TimeSpan.FromSeconds(_clientOptions.CacheHardTtlSeconds));
+                }
+
+                //NotFound is also added to fail counter. This will prevent massive amount of requests to different non-existing content to overload the CMS.
+                AddFailCount(contentFromCms.FetchStatus);
             }
             else
             {
@@ -203,11 +215,10 @@ namespace OptiContentClient.Services
                             contentContainer.Content = new[] { content };
                         }
                     }
-                    
-                    contentContainer.FetchedFromCmsAt = DateTime.UtcNow;
-                    contentContainer.ExpiresAt = DateTime.UtcNow.AddSeconds(overrideCacheSoftTtlSeconds ?? _clientOptions.CacheSoftTtlSeconds);
                 }
-                
+
+                contentContainer.FetchedFromCmsAt = DateTime.UtcNow;
+                contentContainer.ExpiresAt = DateTime.UtcNow.AddSeconds(overrideCacheSoftTtlSeconds ?? _clientOptions.CacheSoftTtlSeconds);
                 contentContainer.FetchStatus = response.StatusCode;
             }
             catch (TaskCanceledException)
