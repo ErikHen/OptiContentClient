@@ -42,7 +42,7 @@ namespace OptiContentClient.Services
             {
                 var queryParameters = HttpUtility.ParseQueryString("?" + pathParts[1]);
                 var editModeValue = queryParameters["epieditmode"];
-                isEditOrPreviewMode = editModeValue != "";
+                isEditOrPreviewMode = !string.IsNullOrEmpty(editModeValue);
                 editModeQuery = isEditOrPreviewMode ? "&epieditmode=" + editModeValue : ""; //but keep edit mode parameter because it might be needed for the CMS request
             }
 
