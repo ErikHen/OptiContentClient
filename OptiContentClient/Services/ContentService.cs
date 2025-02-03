@@ -98,6 +98,26 @@ namespace OptiContentClient.Services
             return await GetContentFromCacheOrCms(fullPathAndQuery, language, true, ignoreCache, overrideCacheSoftTtlSeconds);
         }
 
+        /// <summary>
+        /// Get single content item.
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="contentIdentifier">Content id. Integer or GUID (as string).</param>
+        public async Task<ContentContainer<T>> GetContent<T>(string contentIdentifier, string language = "", string expand = "", string select = "", string additionalQuery = "", bool ignoreCache = false, int? overrideCacheSoftTtlSeconds = null) where T : Content
+        {
+            var contentContainer = await GetContent(contentIdentifier, language, expand, select, additionalQuery, ignoreCache, overrideCacheSoftTtlSeconds);
+            return CastToTyped<T>(contentContainer);
+        }
+
+        public async Task<ContentContainer> GetContent(string contentIdentifier, string language = "", string expand = "", string select = "", string additionalQuery = "", bool ignoreCache = false, int? overrideCacheSoftTtlSeconds = null)
+        {
+            var expandQuery = expand != "" ? $"expand={expand}&" : "";
+            var selectQuery = select != "" ? $"select={select}&" : "";
+            var fullPathAndQuery = $"/api/episerver/v3.0/content/{contentIdentifier}?{expandQuery}{selectQuery}{additionalQuery}";
+
+            return await GetContentFromCacheOrCms(fullPathAndQuery, language, false, ignoreCache, overrideCacheSoftTtlSeconds);
+        }
+
 
         private static ContentContainer<T> CastToTyped<T>(ContentContainer container) where T : Content
         {
@@ -110,6 +130,8 @@ namespace OptiContentClient.Services
                 Message = container.Message
             };
             return typedContentContainer;
+
+            //Note: the cast will fail if the content is not of the expected type. Another approach could be to cast items in the array one by one, and skip items that can't be cast.
         }
 
         private async Task<ContentContainer> GetContentFromCacheOrCms(string pathAndQuery, string language, bool multipleItems, bool ignoreCache, int? overrideCacheSoftTtlSeconds)
@@ -237,7 +259,7 @@ namespace OptiContentClient.Services
 
         private void AddFailCount(HttpStatusCode fetchStatus)
         {
-            if (fetchStatus is HttpStatusCode.InternalServerError or HttpStatusCode.RequestTimeout) //check for more status codes?
+            if (fetchStatus is HttpStatusCode.InternalServerError or HttpStatusCode.RequestTimeout)
             {
                 FailCounterService.AddFail();
             }
