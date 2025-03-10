@@ -6,7 +6,7 @@ Makes it simple to fetch content and map the content to your strongly types mode
 ### Key features
 * Fetch content by url or content identifier (Id or GUID), get children or anscestors. Matches the [endpoints in Content API v3](https://docs.developers.optimizely.com/content-management-system/v1.5.0-content-delivery-api/reference/content_getbycontentidentifier)
 * Easily map your view models with the CMS content models by using a class attribute.
-* Makes sure content is always returned quickly. If expired content can't be refreshed within x milliseconds, the expired content is returned.
+* Makes sure content is always returned quickly. Content cache is updated in the background.
 * You manage where you want the content to be cached by implementing IContentCache.
 * Implements a simple [cuircuit breaker](https://en.wikipedia.org/wiki/Circuit_breaker_design_pattern), so that the CMS is not hammered with requests if repeating errors occurs.
 * Works when doing on-page editing in Optimizely CMS. 
@@ -96,7 +96,7 @@ var childrenArray = (await contentService.GetChildren("105","sv")).Content
 <br>
 
 ## Caching
-OptiContentClient implements a stale-while-revalidate cache. Meaning that content will always be returned quickly from cache. If content is expired it will be updated in a background thread, and the new request will get content fresh from the CMS.
+OptiContentClient implements a stale-while-revalidate cache. Meaning that content will always be returned quickly from cache. If content is expired it will be updated in a background thread, and the next request will get content fresh from the CMS.
 The cache has two expiration times; a "soft time to live", and a "hard time to live". Soft TTL is when content is considered expired, and new content will be fetched from CMS. Hard TTL is how long the content will be stored in the cache (expired or not). This means that if new content can't be fetched from CMS for some reason, previously fetched content will be returned.<br>
 Once content have been stored in the cache you could switch off the CMS and your delivery web app would continue to work.  
 
